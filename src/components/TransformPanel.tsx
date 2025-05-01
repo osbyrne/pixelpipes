@@ -28,14 +28,6 @@ const TransformPanel: React.FC<TransformPanelProps> = ({
           style={{ maxHeight: '200px' }}
         />
       </div>
-      <div className="px-4 py-3 bg-gray-50 border-t">
-        <button
-          onClick={onAddTransform}
-          className="w-full py-1 px-3 text-xs flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded transition-colors"
-        >
-          Add Row Transform
-        </button>
-      </div>
     </div>
   );
 };
