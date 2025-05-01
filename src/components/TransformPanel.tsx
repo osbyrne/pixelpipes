@@ -18,7 +18,7 @@ const TransformPanel: React.FC<TransformPanelProps> = ({
   return (
     <div className="border rounded-lg overflow-hidden shadow-sm bg-white mb-4">
       <div className="bg-gray-50 px-4 py-2 border-b">
-        <h3 className="text-sm font-medium text-gray-700 capitalize">{transformType}</h3>
+        <h3 className="text-sm font-medium text-gray-700 capitalize">{transformType} (Row Transform)</h3>
       </div>
       <div className="p-4">
         <img 
@@ -33,7 +33,7 @@ const TransformPanel: React.FC<TransformPanelProps> = ({
           onClick={onAddTransform}
           className="w-full py-1 px-3 text-xs flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded transition-colors"
         >
-          Add Transform
+          Add Row Transform
         </button>
       </div>
     </div>

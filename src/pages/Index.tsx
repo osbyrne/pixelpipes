@@ -1,7 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ImageUploader from '@/components/ImageUploader';
 import Pipeline from '@/components/Pipeline';
+import { availableTransforms, TransformType } from '@/utils/transforms';
+import { useToast } from '@/hooks/use-toast';
 
 interface ImagePipeline {
   id: string;
@@ -10,6 +12,7 @@ interface ImagePipeline {
 
 const Index = () => {
   const [pipelines, setPipelines] = useState<ImagePipeline[]>([]);
+  const { toast } = useToast();
 
   const handleImageUpload = (imageUrl: string) => {
     const newPipeline: ImagePipeline = {
@@ -19,6 +22,58 @@ const Index = () => {
     
     setPipelines([...pipelines, newPipeline]);
   };
+
+  // Listen for transform events from any pipeline
+  useEffect(() => {
+    const handleTransformApplied = async (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { transformType } = customEvent.detail;
+      
+      // Apply the same transform to all pipelines
+      if (pipelines.length > 1) {
+        // Find the transform object
+        const transform = availableTransforms.find(t => t.type === transformType);
+        if (!transform) return;
+
+        try {
+          // Create a new array to store the updated pipelines
+          const updatedPipelines = [...pipelines];
+          
+          // Process all pipelines to apply the same transform
+          for (let i = 0; i < updatedPipelines.length; i++) {
+            const pipeline = updatedPipelines[i];
+            const transformedImageUrl = await transform.apply(pipeline.imageUrl);
+            
+            updatedPipelines[i] = {
+              ...pipeline,
+              imageUrl: transformedImageUrl
+            };
+          }
+          
+          // Update state with all transformed pipelines
+          setPipelines(updatedPipelines);
+          
+          toast({
+            title: "Row transformation complete",
+            description: `${transform.label} transform applied to all images in the row.`
+          });
+        } catch (error) {
+          console.error('Error applying row transform:', error);
+          toast({
+            title: "Row transform failed",
+            description: "There was a problem applying the transformation to all images.",
+            variant: "destructive"
+          });
+        }
+      }
+    };
+
+    document.addEventListener('transform-applied', handleTransformApplied);
+    
+    return () => {
+      document.removeEventListener('transform-applied', handleTransformApplied);
+    };
+  }, [pipelines, toast]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

@@ -42,9 +42,16 @@ const Pipeline: React.FC<PipelineProps> = ({ imageUrl }) => {
         }
       ]);
       
+      // Broadcast the transform application to parent component
+      document.dispatchEvent(new CustomEvent('transform-applied', {
+        detail: {
+          transformType: transform.type
+        }
+      }));
+      
       toast({
         title: "Transform applied",
-        description: `${transform.label} transform has been applied successfully.`
+        description: `${transform.label} transform has been applied to row.`
       });
     } catch (error) {
       console.error('Error applying transform:', error);
@@ -82,7 +89,7 @@ const Pipeline: React.FC<PipelineProps> = ({ imageUrl }) => {
                 disabled={isProcessing}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Transform
+                Add Row Transform
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-56 p-2">
@@ -130,7 +137,7 @@ const Pipeline: React.FC<PipelineProps> = ({ imageUrl }) => {
               disabled={isProcessing}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Transform
+              Add Row Transform
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-56 p-2">
