@@ -63,24 +63,27 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
   };
 
   return (
-    <div 
-      className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-colors
-        ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      onClick={openFileDialog}
-    >
-      <input 
-        type="file"
-        className="hidden"
-        ref={fileInputRef}
-        onChange={handleFileInput}
-        accept="image/*"
-      />
-      <Upload className="h-10 w-10 text-gray-400 mb-2" />
-      <p className="text-sm text-gray-500 mb-1">Drag & drop an image here</p>
-      <p className="text-xs text-gray-400">or click to browse</p>
+    <div className="p-4 bg-white rounded-lg border shadow-sm flex flex-col items-center">
+      <h3 className="text-sm font-medium text-gray-700 mb-4">Add New Image</h3>
+      <div 
+        className={`border-2 border-dashed rounded-lg p-6 w-full flex flex-col items-center justify-center cursor-pointer transition-colors
+          ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={openFileDialog}
+      >
+        <input 
+          type="file"
+          className="hidden"
+          ref={fileInputRef}
+          onChange={handleFileInput}
+          accept="image/*"
+        />
+        <Upload className="h-10 w-10 text-gray-400 mb-2" />
+        <p className="text-sm text-gray-500 mb-1">Drag & drop an image here</p>
+        <p className="text-xs text-gray-400">or click to browse</p>
+      </div>
     </div>
   );
 };

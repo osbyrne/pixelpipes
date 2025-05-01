@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card';
 
 interface PipelineProps {
   imageUrl: string;
+  layoutType?: 'transforms-only' | 'images-only' | 'full';
 }
 
 interface TransformResult {
@@ -17,7 +18,7 @@ interface TransformResult {
   imageUrl: string;
 }
 
-const Pipeline: React.FC<PipelineProps> = ({ imageUrl }) => {
+const Pipeline: React.FC<PipelineProps> = ({ imageUrl, layoutType = 'full' }) => {
   const [transforms, setTransforms] = useState<TransformResult[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
@@ -66,6 +67,63 @@ const Pipeline: React.FC<PipelineProps> = ({ imageUrl }) => {
     }
   };
 
+  // Render transform controls only
+  if (layoutType === 'transforms-only') {
+    return (
+      <div className="flex flex-col space-y-4">
+        <div className="p-4 rounded-lg bg-white shadow-sm border">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Available Transforms</h3>
+          <div className="grid gap-2">
+            {availableTransforms.map((transform) => (
+              <Button
+                key={transform.type}
+                variant="outline"
+                size="sm"
+                className="justify-start"
+                onClick={() => handleAddTransform(transform)}
+                disabled={isProcessing}
+              >
+                {transform.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render images only
+  if (layoutType === 'images-only') {
+    return (
+      <div className="flex flex-col space-y-4">
+        <Card className="overflow-hidden mb-4">
+          <div className="bg-gray-50 px-4 py-2 border-b">
+            <h3 className="text-sm font-medium text-gray-700">Original Image</h3>
+          </div>
+          <div className="p-4">
+            <img 
+              src={imageUrl} 
+              alt="Original" 
+              className="w-full h-auto object-contain rounded" 
+              style={{ maxHeight: '200px' }}
+            />
+          </div>
+        </Card>
+
+        {transforms.map((transform, index) => (
+          <TransformPanel
+            key={`${transform.type}-${index}`}
+            transformType={transform.type}
+            originalImage={index === 0 ? imageUrl : transforms[index - 1].imageUrl}
+            transformedImage={transform.imageUrl}
+            onAddTransform={() => {}}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  // Full layout (default)
   return (
     <div className="flex gap-4 min-w-[280px] max-w-full">
       {/* Transform controls column */}
