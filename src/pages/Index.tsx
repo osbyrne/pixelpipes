@@ -2,8 +2,6 @@
 import React, { useState } from 'react';
 import ImageUploader from '@/components/ImageUploader';
 import Pipeline from '@/components/Pipeline';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
 
 interface ImagePipeline {
   id: string;
@@ -12,7 +10,6 @@ interface ImagePipeline {
 
 const Index = () => {
   const [pipelines, setPipelines] = useState<ImagePipeline[]>([]);
-  const [showUploader, setShowUploader] = useState(true);
 
   const handleImageUpload = (imageUrl: string) => {
     const newPipeline: ImagePipeline = {
@@ -21,11 +18,6 @@ const Index = () => {
     };
     
     setPipelines([...pipelines, newPipeline]);
-    setShowUploader(false);
-  };
-
-  const handleAddImage = () => {
-    setShowUploader(true);
   };
 
   return (
@@ -41,22 +33,10 @@ const Index = () => {
             <Pipeline key={pipeline.id} imageUrl={pipeline.imageUrl} />
           ))}
           
-          {showUploader ? (
-            <div className="min-w-[280px] max-w-[350px]">
-              <ImageUploader onImageUpload={handleImageUpload} />
-            </div>
-          ) : (
-            <div className="min-w-[280px] max-w-[350px] flex items-center justify-center">
-              <Button 
-                onClick={handleAddImage} 
-                className="h-40 w-full border-2 border-dashed border-gray-300 bg-white hover:bg-gray-50"
-                variant="ghost"
-              >
-                <Plus className="h-6 w-6 mr-2" />
-                Add New Image
-              </Button>
-            </div>
-          )}
+          {/* Drag & drop uploader is always visible and on the rightmost side */}
+          <div className="min-w-[280px] max-w-[350px]">
+            <ImageUploader onImageUpload={handleImageUpload} />
+          </div>
         </div>
       </div>
     </div>
