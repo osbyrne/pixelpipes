@@ -92,7 +92,7 @@ const Index = () => {
           </div>
           
           {/* Middle column - Images */}
-          <div className="col-span-1">
+          <div className="col-span-1 space-y-8">
             {pipelines.map((pipeline) => (
               <Pipeline key={pipeline.id} imageUrl={pipeline.imageUrl} layoutType="images-only" />
             ))}

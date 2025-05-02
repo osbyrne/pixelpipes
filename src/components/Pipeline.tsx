@@ -92,33 +92,37 @@ const Pipeline: React.FC<PipelineProps> = ({ imageUrl, layoutType = 'full' }) =>
     );
   }
 
-  // Render images only
+  // Render images only - with each transform result shown in a vertical column
   if (layoutType === 'images-only') {
     return (
-      <div className="flex flex-col space-y-4">
-        <Card className="overflow-hidden mb-4">
-          <div className="bg-gray-50 px-4 py-2 border-b">
-            <h3 className="text-sm font-medium text-gray-700">Original Image</h3>
-          </div>
-          <div className="p-4">
-            <img 
-              src={imageUrl} 
-              alt="Original" 
-              className="w-full h-auto object-contain rounded" 
-              style={{ maxHeight: '200px' }}
-            />
-          </div>
-        </Card>
+      <div className="mb-8">
+        <div className="flex flex-col">
+          {/* Original Image */}
+          <Card className="overflow-hidden mb-4">
+            <div className="bg-gray-50 px-4 py-2 border-b">
+              <h3 className="text-sm font-medium text-gray-700">Original Image</h3>
+            </div>
+            <div className="p-4">
+              <img 
+                src={imageUrl} 
+                alt="Original" 
+                className="w-full h-auto object-contain rounded" 
+                style={{ maxHeight: '200px' }}
+              />
+            </div>
+          </Card>
 
-        {transforms.map((transform, index) => (
-          <TransformPanel
-            key={`${transform.type}-${index}`}
-            transformType={transform.type}
-            originalImage={index === 0 ? imageUrl : transforms[index - 1].imageUrl}
-            transformedImage={transform.imageUrl}
-            onAddTransform={() => {}}
-          />
-        ))}
+          {/* Transform Results */}
+          {transforms.map((transform, index) => (
+            <TransformPanel
+              key={`${transform.type}-${index}`}
+              transformType={transform.type}
+              originalImage={index === 0 ? imageUrl : transforms[index - 1].imageUrl}
+              transformedImage={transform.imageUrl}
+              onAddTransform={() => {}}
+            />
+          ))}
+        </div>
       </div>
     );
   }
@@ -181,11 +185,7 @@ const Pipeline: React.FC<PipelineProps> = ({ imageUrl, layoutType = 'full' }) =>
             transformType={transform.type}
             originalImage={index === 0 ? imageUrl : transforms[index - 1].imageUrl}
             transformedImage={transform.imageUrl}
-            onAddTransform={() => {
-              // When adding a transform after an existing one, show the popover
-              const button = document.getElementById(`add-transform-${index}`);
-              if (button) button.click();
-            }}
+            onAddTransform={() => {}}
           />
         ))}
       </div>
