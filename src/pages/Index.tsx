@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 interface ImagePipeline {
   id: string;
   imageUrl: string;
+  transforms: { type: TransformType; imageUrl: string }[];
 }
 
 const Index = () => {
@@ -18,6 +19,7 @@ const Index = () => {
     const newPipeline: ImagePipeline = {
       id: `pipeline-${Date.now()}`,
       imageUrl,
+      transforms: []
     };
     
     setPipelines([...pipelines, newPipeline]);
@@ -29,26 +31,45 @@ const Index = () => {
       const customEvent = event as CustomEvent;
       const { transformType } = customEvent.detail;
       
+      console.log('Transform applied event received:', transformType);
+      
       // Apply the same transform to all pipelines
-      if (pipelines.length > 1) {
+      if (pipelines.length > 0) {
         // Find the transform object
         const transform = availableTransforms.find(t => t.type === transformType);
-        if (!transform) return;
+        if (!transform) {
+          console.error('Transform not found:', transformType);
+          return;
+        }
 
         try {
-          // Create a new array to store the updated pipelines
-          const updatedPipelines = [...pipelines];
+          console.log('Applying transform to all pipelines:', transform.label);
           
-          // Process all pipelines to apply the same transform
-          for (let i = 0; i < updatedPipelines.length; i++) {
-            const pipeline = updatedPipelines[i];
-            const transformedImageUrl = await transform.apply(pipeline.imageUrl);
-            
-            updatedPipelines[i] = {
-              ...pipeline,
-              imageUrl: transformedImageUrl
-            };
-          }
+          // Create a new array to store the updated pipelines
+          const updatedPipelines = await Promise.all(
+            pipelines.map(async (pipeline) => {
+              // Get the source image (either original or last transform result)
+              const sourceImage = pipeline.transforms.length > 0 
+                ? pipeline.transforms[pipeline.transforms.length - 1].imageUrl 
+                : pipeline.imageUrl;
+              
+              console.log('Applying transform to source:', sourceImage);
+              
+              // Apply the transformation
+              const transformedImageUrl = await transform.apply(sourceImage);
+              
+              console.log('Transform result:', transformedImageUrl);
+              
+              // Add the new transform to this pipeline
+              return {
+                ...pipeline,
+                transforms: [
+                  ...pipeline.transforms,
+                  { type: transformType, imageUrl: transformedImageUrl }
+                ]
+              };
+            })
+          );
           
           // Update state with all transformed pipelines
           setPipelines(updatedPipelines);
@@ -87,14 +108,23 @@ const Index = () => {
           {/* Left column - Transforms */}
           <div className="col-span-1">
             {pipelines.length > 0 && (
-              <Pipeline imageUrl={pipelines[0].imageUrl} layoutType="transforms-only" />
+              <Pipeline 
+                imageUrl={pipelines[0].imageUrl} 
+                transforms={pipelines[0].transforms}
+                layoutType="transforms-only" 
+              />
             )}
           </div>
           
           {/* Middle column - Images */}
-          <div className="col-span-1 space-y-8">
+          <div className="col-span-1 flex gap-4">
             {pipelines.map((pipeline) => (
-              <Pipeline key={pipeline.id} imageUrl={pipeline.imageUrl} layoutType="images-only" />
+              <Pipeline 
+                key={pipeline.id} 
+                imageUrl={pipeline.imageUrl} 
+                transforms={pipeline.transforms}
+                layoutType="images-only" 
+              />
             ))}
           </div>
           

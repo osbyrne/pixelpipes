@@ -1,4 +1,3 @@
-
 /**
  * Applies grayscale filter to an image
  * @param imageUrl - The data URL or source of the image
@@ -6,9 +5,13 @@
  */
 export const applyGrayscale = (imageUrl: string): Promise<string> => {
   return new Promise((resolve, reject) => {
+    console.log('Starting grayscale transform on:', imageUrl.substring(0, 50) + '...');
+    
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
+      console.log('Image loaded for grayscale, dimensions:', img.width, 'x', img.height);
+      
       const canvas = document.createElement('canvas');
       canvas.width = img.width;
       canvas.height = img.height;
@@ -26,18 +29,24 @@ export const applyGrayscale = (imageUrl: string): Promise<string> => {
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
       
+      console.log('Applying grayscale to', data.length / 4, 'pixels');
+      
       for (let i = 0; i < data.length; i += 4) {
         const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
         data[i] = avg;     // red
         data[i + 1] = avg; // green
         data[i + 2] = avg; // blue
+        // alpha channel (data[i + 3]) remains unchanged
       }
       
       ctx.putImageData(imageData, 0, 0);
-      resolve(canvas.toDataURL('image/jpeg'));
+      const result = canvas.toDataURL('image/jpeg', 0.8);
+      console.log('Grayscale transform complete, result:', result.substring(0, 50) + '...');
+      resolve(result);
     };
     
-    img.onerror = () => {
+    img.onerror = (error) => {
+      console.error('Failed to load image for grayscale:', error);
       reject(new Error('Failed to load image'));
     };
     
@@ -52,9 +61,13 @@ export const applyGrayscale = (imageUrl: string): Promise<string> => {
  */
 export const applySepia = (imageUrl: string): Promise<string> => {
   return new Promise((resolve, reject) => {
+    console.log('Starting sepia transform on:', imageUrl.substring(0, 50) + '...');
+    
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
+      console.log('Image loaded for sepia, dimensions:', img.width, 'x', img.height);
+      
       const canvas = document.createElement('canvas');
       canvas.width = img.width;
       canvas.height = img.height;
@@ -72,6 +85,8 @@ export const applySepia = (imageUrl: string): Promise<string> => {
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
       
+      console.log('Applying sepia to', data.length / 4, 'pixels');
+      
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
         const g = data[i + 1];
@@ -80,13 +95,17 @@ export const applySepia = (imageUrl: string): Promise<string> => {
         data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189)); // red
         data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168)); // green
         data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131)); // blue
+        // alpha channel (data[i + 3]) remains unchanged
       }
       
       ctx.putImageData(imageData, 0, 0);
-      resolve(canvas.toDataURL('image/jpeg'));
+      const result = canvas.toDataURL('image/jpeg', 0.8);
+      console.log('Sepia transform complete, result:', result.substring(0, 50) + '...');
+      resolve(result);
     };
     
-    img.onerror = () => {
+    img.onerror = (error) => {
+      console.error('Failed to load image for sepia:', error);
       reject(new Error('Failed to load image'));
     };
     
