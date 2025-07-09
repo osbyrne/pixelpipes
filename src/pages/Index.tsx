@@ -4,6 +4,8 @@ import ImageUploader from '@/components/ImageUploader';
 import Pipeline from '@/components/Pipeline';
 import { availableTransforms, TransformType } from '@/utils/transforms';
 import { useToast } from '@/hooks/use-toast';
+import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ImagePipeline {
   id: string;
@@ -23,6 +25,68 @@ const Index = () => {
     };
     
     setPipelines([...pipelines, newPipeline]);
+  };
+
+  const handleDeleteStep = async (stepIndex: number) => {
+    if (pipelines.length === 0) return;
+
+    try {
+      console.log('Deleting step at index:', stepIndex);
+      
+      // Create new pipelines with the step removed and recompute subsequent steps
+      const updatedPipelines = await Promise.all(
+        pipelines.map(async (pipeline) => {
+          // Remove the step at stepIndex
+          const newTransforms = [...pipeline.transforms];
+          newTransforms.splice(stepIndex, 1);
+          
+          // If there are remaining transforms after the deleted one, recompute them
+          const recomputedTransforms = [];
+          let currentImageUrl = pipeline.imageUrl;
+          
+          for (let i = 0; i < newTransforms.length; i++) {
+            if (i < stepIndex) {
+              // Keep transforms before the deleted step as they are
+              recomputedTransforms.push(newTransforms[i]);
+              currentImageUrl = newTransforms[i].imageUrl;
+            } else {
+              // Recompute transforms from the deletion point onward
+              const transformType = newTransforms[i].type;
+              const transform = availableTransforms.find(t => t.type === transformType);
+              
+              if (transform) {
+                const transformedImageUrl = await transform.apply(currentImageUrl);
+                const recomputedTransform = { 
+                  type: transformType, 
+                  imageUrl: transformedImageUrl 
+                };
+                recomputedTransforms.push(recomputedTransform);
+                currentImageUrl = transformedImageUrl;
+              }
+            }
+          }
+          
+          return {
+            ...pipeline,
+            transforms: recomputedTransforms
+          };
+        })
+      );
+      
+      setPipelines(updatedPipelines);
+      
+      toast({
+        title: "Step removed",
+        description: "Pipeline has been recomputed for all images."
+      });
+    } catch (error) {
+      console.error('Error deleting step:', error);
+      toast({
+        title: "Delete failed",
+        description: "There was a problem removing the step.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Listen for transform events from any pipeline
@@ -132,6 +196,14 @@ const Index = () => {
                       <span className="capitalize font-medium text-gray-700">
                         {index + 1}. {transform.type}
                       </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 hover:bg-red-100"
+                        onClick={() => handleDeleteStep(index)}
+                      >
+                        <X className="h-3 w-3 text-red-500" />
+                      </Button>
                     </div>
                   ))}
                 </div>
