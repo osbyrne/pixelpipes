@@ -104,9 +104,9 @@ const Index = () => {
           <p className="text-gray-600">Upload images and apply transformations to create visual pipelines</p>
         </header>
         
-        {/* Mobile: Stack vertically, Desktop: 3 columns */}
-        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6">
-          {/* Left column - Transforms */}
+        {/* Mobile: Stack vertically, Desktop: 4 columns */}
+        <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6">
+          {/* Transform controls */}
           <div className="order-1 lg:col-span-1">
             {pipelines.length > 0 && (
               <Pipeline 
@@ -117,13 +117,30 @@ const Index = () => {
             )}
           </div>
           
-          {/* Right column - Image uploader (on mobile, show first) */}
-          <div className="order-2 lg:order-3 lg:col-span-1">
-            <ImageUploader onImageUpload={handleImageUpload} />
+          {/* Applied effects list */}
+          <div className="order-2 lg:col-span-1">
+            {pipelines.length > 0 && pipelines[0].transforms.length > 0 && (
+              <div className="p-4 rounded-lg bg-white shadow-sm border">
+                <h3 className="text-sm font-medium text-gray-700 mb-3 hidden sm:block">Applied Effects</h3>
+                <h3 className="text-xs font-medium text-gray-700 mb-3 sm:hidden">Effects</h3>
+                <div className="space-y-2">
+                  {pipelines[0].transforms.map((transform, index) => (
+                    <div 
+                      key={`${transform.type}-${index}`}
+                      className="flex items-center justify-between p-2 bg-gray-50 rounded border text-sm"
+                    >
+                      <span className="capitalize font-medium text-gray-700">
+                        {index + 1}. {transform.type}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           
-          {/* Middle column - Images (show last on mobile) */}
-          <div className="order-3 lg:order-2 lg:col-span-1 flex gap-2 overflow-x-auto">
+          {/* Images */}
+          <div className="order-4 lg:order-3 lg:col-span-1 flex gap-2 overflow-x-auto">
             {pipelines.map((pipeline) => (
               <Pipeline 
                 key={pipeline.id} 
@@ -132,6 +149,11 @@ const Index = () => {
                 layoutType="images-only" 
               />
             ))}
+          </div>
+          
+          {/* Image uploader */}
+          <div className="order-3 lg:order-4 lg:col-span-1">
+            <ImageUploader onImageUpload={handleImageUpload} />
           </div>
         </div>
       </div>
