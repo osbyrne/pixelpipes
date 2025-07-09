@@ -104,9 +104,10 @@ const Index = () => {
           <p className="text-gray-600">Upload images and apply transformations to create visual pipelines</p>
         </header>
         
-        <div className="grid grid-cols-3 gap-6">
+        {/* Mobile: Stack vertically, Desktop: 3 columns */}
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6">
           {/* Left column - Transforms */}
-          <div className="col-span-1">
+          <div className="order-1 lg:col-span-1">
             {pipelines.length > 0 && (
               <Pipeline 
                 imageUrl={pipelines[0].imageUrl} 
@@ -116,8 +117,13 @@ const Index = () => {
             )}
           </div>
           
-          {/* Middle column - Images */}
-          <div className="col-span-1 flex gap-4">
+          {/* Right column - Image uploader (on mobile, show first) */}
+          <div className="order-2 lg:order-3 lg:col-span-1">
+            <ImageUploader onImageUpload={handleImageUpload} />
+          </div>
+          
+          {/* Middle column - Images (show last on mobile) */}
+          <div className="order-3 lg:order-2 lg:col-span-1 flex gap-2 overflow-x-auto">
             {pipelines.map((pipeline) => (
               <Pipeline 
                 key={pipeline.id} 
@@ -126,11 +132,6 @@ const Index = () => {
                 layoutType="images-only" 
               />
             ))}
-          </div>
-          
-          {/* Right column - Image uploader */}
-          <div className="col-span-1">
-            <ImageUploader onImageUpload={handleImageUpload} />
           </div>
         </div>
       </div>

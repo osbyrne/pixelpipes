@@ -63,10 +63,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg border shadow-sm flex flex-col items-center">
-      <h3 className="text-sm font-medium text-gray-700 mb-4">Add New Image</h3>
+    <div className="p-2 sm:p-4 bg-white rounded-lg border shadow-sm flex flex-col items-center">
+      <h3 className="text-xs sm:text-sm font-medium text-gray-700 mb-4 hidden sm:block">Add New Image</h3>
+      <h3 className="text-xs font-medium text-gray-700 mb-4 sm:hidden">Add Image</h3>
       <div 
-        className={`border-2 border-dashed rounded-lg p-6 w-full flex flex-col items-center justify-center cursor-pointer transition-colors
+        className={`border-2 border-dashed rounded-lg p-4 sm:p-6 w-full flex flex-col items-center justify-center cursor-pointer transition-colors
           ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -80,9 +81,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
           onChange={handleFileInput}
           accept="image/*"
         />
-        <Upload className="h-10 w-10 text-gray-400 mb-2" />
-        <p className="text-sm text-gray-500 mb-1">Drag & drop an image here</p>
-        <p className="text-xs text-gray-400">or click to browse</p>
+        <Upload className="h-8 w-8 sm:h-10 sm:w-10 text-gray-400 mb-2" />
+        <p className="text-xs sm:text-sm text-gray-500 mb-1 hidden sm:block">Drag & drop an image here</p>
+        <p className="text-xs text-gray-500 mb-1 sm:hidden">Upload</p>
+        <p className="text-xs text-gray-400 hidden sm:block">or click to browse</p>
       </div>
     </div>
   );
