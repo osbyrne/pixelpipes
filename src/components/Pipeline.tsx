@@ -4,7 +4,7 @@ import TransformPanel from './TransformPanel';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
-import { Palette, Contrast } from 'lucide-react';
+import { Palette, Contrast, Minus } from 'lucide-react';
 
 interface PipelineProps {
   imageUrl: string;
@@ -48,6 +48,8 @@ const Pipeline: React.FC<PipelineProps> = ({ imageUrl, transforms = [], layoutTy
         return Contrast;
       case 'sepia':
         return Palette;
+      case 'invert':
+        return Minus;
       default:
         return Palette;
     }

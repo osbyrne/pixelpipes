@@ -113,8 +113,63 @@ export const applySepia = (imageUrl: string): Promise<string> => {
   });
 };
 
+/**
+ * Applies color inversion filter to an image
+ * @param imageUrl - The data URL or source of the image
+ * @returns Promise that resolves with the transformed image data URL
+ */
+export const applyInvert = (imageUrl: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    console.log('Starting invert transform on:', imageUrl.substring(0, 50) + '...');
+    
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      console.log('Image loaded for invert, dimensions:', img.width, 'x', img.height);
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        reject(new Error('Could not get canvas context'));
+        return;
+      }
+      
+      // Draw the original image
+      ctx.drawImage(img, 0, 0);
+      
+      // Apply invert filter
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      console.log('Applying invert to', data.length / 4, 'pixels');
+      
+      for (let i = 0; i < data.length; i += 4) {
+        data[i] = 255 - data[i];         // red
+        data[i + 1] = 255 - data[i + 1]; // green
+        data[i + 2] = 255 - data[i + 2]; // blue
+        // alpha channel (data[i + 3]) remains unchanged
+      }
+      
+      ctx.putImageData(imageData, 0, 0);
+      const result = canvas.toDataURL('image/jpeg', 0.8);
+      console.log('Invert transform complete, result:', result.substring(0, 50) + '...');
+      resolve(result);
+    };
+    
+    img.onerror = (error) => {
+      console.error('Failed to load image for invert:', error);
+      reject(new Error('Failed to load image'));
+    };
+    
+    img.src = imageUrl;
+  });
+};
+
 // Transform types and options
-export type TransformType = 'grayscale' | 'sepia';
+export type TransformType = 'grayscale' | 'sepia' | 'invert';
 
 export interface Transform {
   type: TransformType;
@@ -132,5 +187,10 @@ export const availableTransforms: Transform[] = [
     type: 'sepia',
     label: 'Sepia',
     apply: applySepia
+  },
+  {
+    type: 'invert',
+    label: 'Invert',
+    apply: applyInvert
   }
 ];
