@@ -14,16 +14,18 @@ import { Slider } from '@/components/ui/slider'
 interface ColorPickerDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onConfirm: (color: string, tolerance: number) => void
+  onConfirm: (color: string, tolerance: number, transparencyThreshold: number, opacityThreshold: number) => void
   onCancel: () => void
 }
 
 export function ColorPickerDialog({ open, onOpenChange, onConfirm, onCancel }: ColorPickerDialogProps) {
   const [selectedColor, setSelectedColor] = useState('#ffffff')
   const [tolerance, setTolerance] = useState([30])
+  const [transparencyThreshold, setTransparencyThreshold] = useState([50])
+  const [opacityThreshold, setOpacityThreshold] = useState([80])
 
   const handleConfirm = () => {
-    onConfirm(selectedColor, tolerance[0])
+    onConfirm(selectedColor, tolerance[0], transparencyThreshold[0], opacityThreshold[0])
     onOpenChange(false)
   }
 
@@ -81,6 +83,42 @@ export function ColorPickerDialog({ open, onOpenChange, onConfirm, onCancel }: C
             />
             <p className="text-sm text-muted-foreground">
               Higher values make more similar colors transparent
+            </p>
+          </div>
+
+          <div className="grid gap-3">
+            <Label htmlFor="transparency-slider">
+              Transparency Threshold: {transparencyThreshold[0]}%
+            </Label>
+            <Slider
+              id="transparency-slider"
+              min={0}
+              max={100}
+              step={1}
+              value={transparencyThreshold}
+              onValueChange={setTransparencyThreshold}
+              className="w-full"
+            />
+            <p className="text-sm text-muted-foreground">
+              Minimum transparency level for matched colors
+            </p>
+          </div>
+
+          <div className="grid gap-3">
+            <Label htmlFor="opacity-slider">
+              Opacity Threshold: {opacityThreshold[0]}%
+            </Label>
+            <Slider
+              id="opacity-slider"
+              min={0}
+              max={100}
+              step={1}
+              value={opacityThreshold}
+              onValueChange={setOpacityThreshold}
+              className="w-full"
+            />
+            <p className="text-sm text-muted-foreground">
+              Maximum opacity for partially matched colors
             </p>
           </div>
         </div>

@@ -143,10 +143,10 @@ const Index = () => {
     });
   };
 
-  const handleColorPickerConfirm = async (color: string, tolerance: number) => {
+  const handleColorPickerConfirm = async (color: string, tolerance: number, transparencyThreshold: number, opacityThreshold: number) => {
     if (!pendingTransform) return;
     
-    const params = { color, tolerance };
+    const params = { color, tolerance, transparencyThreshold, opacityThreshold };
     await applyTransformWithParams(pendingTransform, params);
     setPendingTransform(null);
   };

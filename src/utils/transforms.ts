@@ -173,12 +173,20 @@ export const applyInvert = (imageUrl: string): Promise<string> => {
  * @param imageUrl - The data URL or source of the image
  * @param targetColor - The hex color to make transparent (e.g., "#ffffff")
  * @param tolerance - Color tolerance threshold (0-255)
+ * @param transparencyThreshold - Minimum transparency level (0-100)
+ * @param opacityThreshold - Maximum opacity for partial matches (0-100)
  * @returns Promise that resolves with the transformed image data URL
  */
-export const applyColorToAlpha = (imageUrl: string, targetColor: string = "#ffffff", tolerance: number = 30): Promise<string> => {
+export const applyColorToAlpha = (
+  imageUrl: string, 
+  targetColor: string = "#ffffff", 
+  tolerance: number = 30,
+  transparencyThreshold: number = 50,
+  opacityThreshold: number = 80
+): Promise<string> => {
   return new Promise((resolve, reject) => {
     console.log('Starting color-to-alpha transform on:', imageUrl.substring(0, 50) + '...');
-    console.log('Target color:', targetColor, 'Tolerance:', tolerance);
+    console.log('Params - Target color:', targetColor, 'Tolerance:', tolerance, 'Transparency threshold:', transparencyThreshold, 'Opacity threshold:', opacityThreshold);
     
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -222,10 +230,19 @@ export const applyColorToAlpha = (imageUrl: string, targetColor: string = "#ffff
         const deltaB = Math.abs(b - targetB);
         const distance = Math.sqrt(deltaR * deltaR + deltaG * deltaG + deltaB * deltaB);
         
-        // If color is within tolerance, make it transparent
+        // Apply transparency thresholds with improved algorithm
         if (distance <= tolerance) {
-          const alpha = Math.max(0, (distance / tolerance) * 255);
-          data[i + 3] = alpha; // Set alpha channel
+          // Calculate alpha based on distance and thresholds
+          const normalizedDistance = distance / tolerance; // 0 to 1
+          
+          // Map transparency and opacity thresholds to 0-255 range
+          const minAlpha = (transparencyThreshold / 100) * 255;
+          const maxAlpha = (opacityThreshold / 100) * 255;
+          
+          // Calculate final alpha: closer colors get more transparency
+          const alpha = Math.max(minAlpha, Math.min(maxAlpha, normalizedDistance * 255));
+          
+          data[i + 3] = Math.round(255 - alpha); // Invert for transparency
         }
       }
       
@@ -252,6 +269,8 @@ export interface TransformStep {
   params?: {
     color?: string;
     tolerance?: number;
+    transparencyThreshold?: number;
+    opacityThreshold?: number;
   };
 }
 
@@ -281,8 +300,8 @@ export const availableTransforms: Transform[] = [
   {
     type: 'color-to-alpha',
     label: 'Color to Alpha',
-    apply: (imageUrl: string, params?: { color?: string; tolerance?: number }) => 
-      applyColorToAlpha(imageUrl, params?.color, params?.tolerance),
+    apply: (imageUrl: string, params?: { color?: string; tolerance?: number; transparencyThreshold?: number; opacityThreshold?: number }) => 
+      applyColorToAlpha(imageUrl, params?.color, params?.tolerance, params?.transparencyThreshold, params?.opacityThreshold),
     needsParams: true
   }
 ];
