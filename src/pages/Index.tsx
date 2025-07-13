@@ -17,14 +17,49 @@ const Index = () => {
   const [pipelines, setPipelines] = useState<ImagePipeline[]>([]);
   const { toast } = useToast();
 
-  const handleImageUpload = (imageUrl: string) => {
-    const newPipeline: ImagePipeline = {
-      id: `pipeline-${Date.now()}`,
-      imageUrl,
-      transforms: []
-    };
-    
-    setPipelines([...pipelines, newPipeline]);
+  const handleImageUpload = async (imageUrl: string) => {
+    try {
+      // If there are existing pipelines with transforms, apply them to the new image
+      let transforms = [];
+      if (pipelines.length > 0 && pipelines[0].transforms.length > 0) {
+        let currentImageUrl = imageUrl;
+        
+        // Apply each transform sequentially
+        for (const transform of pipelines[0].transforms) {
+          const transformDefinition = availableTransforms.find(t => t.type === transform.type);
+          if (transformDefinition) {
+            const transformedImageUrl = await transformDefinition.apply(currentImageUrl);
+            transforms.push({
+              type: transform.type,
+              imageUrl: transformedImageUrl
+            });
+            currentImageUrl = transformedImageUrl;
+          }
+        }
+      }
+
+      const newPipeline: ImagePipeline = {
+        id: `pipeline-${Date.now()}`,
+        imageUrl,
+        transforms
+      };
+      
+      setPipelines([...pipelines, newPipeline]);
+
+      if (transforms.length > 0) {
+        toast({
+          title: "Image added with transforms",
+          description: `Applied ${transforms.length} existing transform${transforms.length > 1 ? 's' : ''} to the new image.`
+        });
+      }
+    } catch (error) {
+      console.error('Error applying transforms to new image:', error);
+      toast({
+        title: "Image added with errors",
+        description: "Some transforms could not be applied to the new image.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleDeleteStep = async (stepIndex: number) => {
