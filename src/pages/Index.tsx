@@ -124,6 +124,15 @@ const Index = () => {
     }
   };
 
+  const handleDeletePipeline = (pipelineId: string) => {
+    setPipelines(pipelines.filter(pipeline => pipeline.id !== pipelineId));
+    
+    toast({
+      title: "Image removed",
+      description: "The image and its transformations have been removed."
+    });
+  };
+
   // Listen for transform events from any pipeline
   useEffect(() => {
     const handleTransformApplied = async (event: Event) => {
@@ -249,12 +258,21 @@ const Index = () => {
           {/* Images */}
           <div className="order-4 lg:order-3 lg:col-span-1 flex gap-2 overflow-x-auto">
             {pipelines.map((pipeline) => (
-              <Pipeline 
-                key={pipeline.id} 
-                imageUrl={pipeline.imageUrl} 
-                transforms={pipeline.transforms}
-                layoutType="images-only" 
-              />
+              <div key={pipeline.id} className="relative">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-2 right-2 z-10 h-6 w-6 p-0 bg-white/90 hover:bg-red-100 border border-gray-200 rounded-full shadow-sm"
+                  onClick={() => handleDeletePipeline(pipeline.id)}
+                >
+                  <X className="h-3 w-3 text-red-500" />
+                </Button>
+                <Pipeline 
+                  imageUrl={pipeline.imageUrl} 
+                  transforms={pipeline.transforms}
+                  layoutType="images-only" 
+                />
+              </div>
             ))}
           </div>
           
