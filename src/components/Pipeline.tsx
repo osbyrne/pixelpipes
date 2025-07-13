@@ -65,9 +65,9 @@ const Pipeline: React.FC<PipelineProps> = ({ imageUrl, transforms = [], layoutTy
   if (layoutType === 'transforms-only') {
     return (
       <div className="flex flex-col space-y-4">
-        <div className="p-4 rounded-lg bg-white shadow-sm border">
-          <h3 className="text-sm font-medium text-gray-700 mb-3 hidden sm:block">Available Transforms</h3>
-          <h3 className="text-sm font-medium text-gray-700 mb-3 sm:hidden">Transforms</h3>
+        <div className="p-4 rounded-lg bg-card shadow-sm border border-border">
+          <h3 className="text-sm font-medium text-card-foreground mb-3 hidden sm:block">Available Transforms</h3>
+          <h3 className="text-sm font-medium text-card-foreground mb-3 sm:hidden">Transforms</h3>
           <div className="grid gap-2">
             {availableTransforms.map((transform) => {
               const Icon = getTransformIcon(transform.type);
@@ -97,8 +97,8 @@ const Pipeline: React.FC<PipelineProps> = ({ imageUrl, transforms = [], layoutTy
       <div className="flex flex-col space-y-4 min-w-[150px] sm:min-w-[200px]">
         {/* Original Image */}
         <Card className="overflow-hidden">
-          <div className="bg-gray-50 px-2 sm:px-4 py-2 border-b">
-            <h3 className="text-xs sm:text-sm font-medium text-gray-700">Original</h3>
+          <div className="bg-muted px-2 sm:px-4 py-2 border-b border-border">
+            <h3 className="text-xs sm:text-sm font-medium text-muted-foreground">Original</h3>
           </div>
           <div className="p-2 sm:p-4">
             <img 
@@ -113,11 +113,11 @@ const Pipeline: React.FC<PipelineProps> = ({ imageUrl, transforms = [], layoutTy
         {/* Transform Results */}
         {transforms.map((transform, index) => (
           <Card key={`${transform.type}-${index}`} className="overflow-hidden">
-            <div className="bg-gray-50 px-2 sm:px-4 py-2 border-b">
-              <h3 className="text-xs sm:text-sm font-medium text-gray-700 capitalize">
+            <div className="bg-muted px-2 sm:px-4 py-2 border-b border-border">
+              <h3 className="text-xs sm:text-sm font-medium text-muted-foreground capitalize">
                 {transform.type.replace('-', ' ')}
                 {transform.params?.color && (
-                  <span className="ml-2 text-xs text-gray-500">
+                  <span className="ml-2 text-xs text-muted-foreground/70">
                     ({transform.params.color})
                   </span>
                 )}
@@ -156,8 +156,8 @@ const Pipeline: React.FC<PipelineProps> = ({ imageUrl, transforms = [], layoutTy
       {/* Images column */}
       <div className="flex flex-col space-y-4 min-w-[280px] max-w-[350px]">
         <Card className="overflow-hidden">
-          <div className="bg-gray-50 px-4 py-2 border-b">
-            <h3 className="text-sm font-medium text-gray-700">Original Image</h3>
+          <div className="bg-muted px-4 py-2 border-b border-border">
+            <h3 className="text-sm font-medium text-muted-foreground">Original Image</h3>
           </div>
           <div className="p-4">
             <img 

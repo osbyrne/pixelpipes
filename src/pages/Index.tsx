@@ -267,25 +267,25 @@ const Index = () => {
           {/* Applied effects list */}
           <div className="order-2 lg:col-span-1">
             {pipelines.length > 0 && pipelines[0].transforms.length > 0 && (
-              <div className="p-4 rounded-lg bg-white shadow-sm border">
-                <h3 className="text-sm font-medium text-gray-700 mb-3 hidden sm:block">Applied Effects</h3>
-                <h3 className="text-xs font-medium text-gray-700 mb-3 sm:hidden">Effects</h3>
+              <div className="p-4 rounded-lg bg-card shadow-sm border border-border">
+                <h3 className="text-sm font-medium text-card-foreground mb-3 hidden sm:block">Applied Effects</h3>
+                <h3 className="text-xs font-medium text-card-foreground mb-3 sm:hidden">Effects</h3>
                 <div className="space-y-2">
                   {pipelines[0].transforms.map((transform, index) => (
                     <div 
                       key={`${transform.type}-${index}`}
-                      className="flex items-center justify-between p-2 bg-gray-50 rounded border text-sm"
+                      className="flex items-center justify-between p-2 bg-muted rounded border border-border text-sm"
                     >
-                      <span className="capitalize font-medium text-gray-700">
+                      <span className="capitalize font-medium text-muted-foreground">
                         {index + 1}. {transform.type}
                       </span>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0 hover:bg-red-100"
+                        className="h-6 w-6 p-0 hover:bg-destructive/10"
                         onClick={() => handleDeleteStep(index)}
                       >
-                        <X className="h-3 w-3 text-red-500" />
+                        <X className="h-3 w-3 text-destructive" />
                       </Button>
                     </div>
                   ))}
@@ -301,10 +301,10 @@ const Index = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="absolute top-2 right-2 z-10 h-6 w-6 p-0 bg-white/90 hover:bg-red-100 border border-gray-200 rounded-full shadow-sm"
+                  className="absolute top-2 right-2 z-10 h-6 w-6 p-0 bg-background/90 hover:bg-destructive/10 border border-border rounded-full shadow-sm"
                   onClick={() => handleDeletePipeline(pipeline.id)}
                 >
-                  <X className="h-3 w-3 text-red-500" />
+                  <X className="h-3 w-3 text-destructive" />
                 </Button>
                 <Pipeline 
                   imageUrl={pipeline.imageUrl} 
