@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import ImageUploader from '@/components/ImageUploader';
 import Pipeline from '@/components/Pipeline';
 import { ColorPickerDialog } from '@/components/ColorPickerDialog';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { availableTransforms, TransformType, TransformStep } from '@/utils/transforms';
 import { useToast } from '@/hooks/use-toast';
 import { X } from 'lucide-react';
@@ -240,11 +241,14 @@ const Index = () => {
   }, [pipelines, toast]);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4">
-        <header className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Visual Pipeline Gallery</h1>
-          <p className="text-gray-600">Upload images and apply transformations to create visual pipelines</p>
+        <header className="mb-8 text-center relative">
+          <div className="absolute top-0 right-0">
+            <ThemeToggle />
+          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Visual Pipeline Gallery</h1>
+          <p className="text-muted-foreground">Upload images and apply transformations to create visual pipelines</p>
         </header>
         
         {/* Mobile: Stack vertically, Desktop: 4 columns */}
