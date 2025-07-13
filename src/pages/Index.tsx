@@ -2,25 +2,32 @@
 import React, { useState, useEffect } from 'react';
 import ImageUploader from '@/components/ImageUploader';
 import Pipeline from '@/components/Pipeline';
-import { availableTransforms, TransformType } from '@/utils/transforms';
+import { ColorPickerDialog } from '@/components/ColorPickerDialog';
+import { availableTransforms, TransformType, TransformStep } from '@/utils/transforms';
 import { useToast } from '@/hooks/use-toast';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+interface PipelineTransform extends TransformStep {
+  imageUrl: string;
+}
+
 interface ImagePipeline {
   id: string;
   imageUrl: string;
-  transforms: { type: TransformType; imageUrl: string }[];
+  transforms: PipelineTransform[];
 }
 
 const Index = () => {
   const [pipelines, setPipelines] = useState<ImagePipeline[]>([]);
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
+  const [pendingTransform, setPendingTransform] = useState<TransformType | null>(null);
   const { toast } = useToast();
 
   const handleImageUpload = async (imageUrl: string) => {
     try {
       // If there are existing pipelines with transforms, apply them to the new image
-      let transforms = [];
+      let transforms: PipelineTransform[] = [];
       if (pipelines.length > 0 && pipelines[0].transforms.length > 0) {
         let currentImageUrl = imageUrl;
         
@@ -28,9 +35,10 @@ const Index = () => {
         for (const transform of pipelines[0].transforms) {
           const transformDefinition = availableTransforms.find(t => t.type === transform.type);
           if (transformDefinition) {
-            const transformedImageUrl = await transformDefinition.apply(currentImageUrl);
+            const transformedImageUrl = await transformDefinition.apply(currentImageUrl, transform.params);
             transforms.push({
               type: transform.type,
+              params: transform.params,
               imageUrl: transformedImageUrl
             });
             currentImageUrl = transformedImageUrl;
@@ -76,7 +84,7 @@ const Index = () => {
           newTransforms.splice(stepIndex, 1);
           
           // If there are remaining transforms after the deleted one, recompute them
-          const recomputedTransforms = [];
+          const recomputedTransforms: PipelineTransform[] = [];
           let currentImageUrl = pipeline.imageUrl;
           
           for (let i = 0; i < newTransforms.length; i++) {
@@ -90,9 +98,10 @@ const Index = () => {
               const transform = availableTransforms.find(t => t.type === transformType);
               
               if (transform) {
-                const transformedImageUrl = await transform.apply(currentImageUrl);
-                const recomputedTransform = { 
-                  type: transformType, 
+                const transformedImageUrl = await transform.apply(currentImageUrl, newTransforms[i].params);
+                const recomputedTransform: PipelineTransform = { 
+                  type: transformType,
+                  params: newTransforms[i].params,
                   imageUrl: transformedImageUrl 
                 };
                 recomputedTransforms.push(recomputedTransform);
@@ -133,6 +142,74 @@ const Index = () => {
     });
   };
 
+  const handleColorPickerConfirm = async (color: string, tolerance: number) => {
+    if (!pendingTransform) return;
+    
+    const params = { color, tolerance };
+    await applyTransformWithParams(pendingTransform, params);
+    setPendingTransform(null);
+  };
+
+  const handleColorPickerCancel = () => {
+    setPendingTransform(null);
+  };
+
+  const applyTransformWithParams = async (transformType: TransformType, params?: any) => {
+    if (pipelines.length === 0) return;
+
+    // Find the transform object
+    const transform = availableTransforms.find(t => t.type === transformType);
+    if (!transform) {
+      console.error('Transform not found:', transformType);
+      return;
+    }
+
+    try {
+      console.log('Applying transform to all pipelines:', transform.label, 'with params:', params);
+      
+      // Create a new array to store the updated pipelines
+      const updatedPipelines = await Promise.all(
+        pipelines.map(async (pipeline) => {
+          // Get the source image (either original or last transform result)
+          const sourceImage = pipeline.transforms.length > 0 
+            ? pipeline.transforms[pipeline.transforms.length - 1].imageUrl 
+            : pipeline.imageUrl;
+          
+          console.log('Applying transform to source:', sourceImage);
+          
+          // Apply the transformation
+          const transformedImageUrl = await transform.apply(sourceImage, params);
+          
+          console.log('Transform result:', transformedImageUrl);
+          
+          // Add the new transform to this pipeline
+          return {
+            ...pipeline,
+            transforms: [
+              ...pipeline.transforms,
+              { type: transformType, params, imageUrl: transformedImageUrl }
+            ]
+          };
+        })
+      );
+      
+      // Update state with all transformed pipelines
+      setPipelines(updatedPipelines);
+      
+      toast({
+        title: "Transform complete",
+        description: `${transform.label} applied to all images.`
+      });
+    } catch (error) {
+      console.error('Error applying transform:', error);
+      toast({
+        title: "Transform failed",
+        description: "There was a problem applying the transformation.",
+        variant: "destructive"
+      });
+    }
+  };
+
   // Listen for transform events from any pipeline
   useEffect(() => {
     const handleTransformApplied = async (event: Event) => {
@@ -141,60 +218,18 @@ const Index = () => {
       
       console.log('Transform applied event received:', transformType);
       
-      // Apply the same transform to all pipelines
-      if (pipelines.length > 0) {
-        // Find the transform object
-        const transform = availableTransforms.find(t => t.type === transformType);
-        if (!transform) {
-          console.error('Transform not found:', transformType);
+      // Check if this transform needs parameters
+      const transform = availableTransforms.find(t => t.type === transformType);
+      if (transform?.needsParams) {
+        if (transformType === 'color-to-alpha') {
+          setPendingTransform(transformType);
+          setColorPickerOpen(true);
           return;
         }
-
-        try {
-          console.log('Applying transform to all pipelines:', transform.label);
-          
-          // Create a new array to store the updated pipelines
-          const updatedPipelines = await Promise.all(
-            pipelines.map(async (pipeline) => {
-              // Get the source image (either original or last transform result)
-              const sourceImage = pipeline.transforms.length > 0 
-                ? pipeline.transforms[pipeline.transforms.length - 1].imageUrl 
-                : pipeline.imageUrl;
-              
-              console.log('Applying transform to source:', sourceImage);
-              
-              // Apply the transformation
-              const transformedImageUrl = await transform.apply(sourceImage);
-              
-              console.log('Transform result:', transformedImageUrl);
-              
-              // Add the new transform to this pipeline
-              return {
-                ...pipeline,
-                transforms: [
-                  ...pipeline.transforms,
-                  { type: transformType, imageUrl: transformedImageUrl }
-                ]
-              };
-            })
-          );
-          
-          // Update state with all transformed pipelines
-          setPipelines(updatedPipelines);
-          
-          toast({
-            title: "Row transformation complete",
-            description: `${transform.label} transform applied to all images in the row.`
-          });
-        } catch (error) {
-          console.error('Error applying row transform:', error);
-          toast({
-            title: "Row transform failed",
-            description: "There was a problem applying the transformation to all images.",
-            variant: "destructive"
-          });
-        }
       }
+      
+      // Apply transform without parameters
+      await applyTransformWithParams(transformType);
     };
 
     document.addEventListener('transform-applied', handleTransformApplied);
@@ -281,6 +316,13 @@ const Index = () => {
             <ImageUploader onImageUpload={handleImageUpload} />
           </div>
         </div>
+        
+        <ColorPickerDialog
+          open={colorPickerOpen}
+          onOpenChange={setColorPickerOpen}
+          onConfirm={handleColorPickerConfirm}
+          onCancel={handleColorPickerCancel}
+        />
       </div>
     </div>
   );

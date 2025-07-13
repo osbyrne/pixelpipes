@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
-import { availableTransforms, Transform, TransformType } from '@/utils/transforms';
+import { availableTransforms, Transform, TransformType, TransformStep } from '@/utils/transforms';
 import TransformPanel from './TransformPanel';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
-import { Palette, Contrast, Minus } from 'lucide-react';
+import { Palette, Contrast, Minus, Droplets } from 'lucide-react';
+
+interface PipelineTransform extends TransformStep {
+  imageUrl: string;
+}
 
 interface PipelineProps {
   imageUrl: string;
-  transforms?: { type: TransformType; imageUrl: string }[];
+  transforms?: PipelineTransform[];
   layoutType?: 'transforms-only' | 'images-only' | 'full';
 }
 
@@ -50,6 +54,8 @@ const Pipeline: React.FC<PipelineProps> = ({ imageUrl, transforms = [], layoutTy
         return Palette;
       case 'invert':
         return Minus;
+      case 'color-to-alpha':
+        return Droplets;
       default:
         return Palette;
     }
@@ -109,7 +115,12 @@ const Pipeline: React.FC<PipelineProps> = ({ imageUrl, transforms = [], layoutTy
           <Card key={`${transform.type}-${index}`} className="overflow-hidden">
             <div className="bg-gray-50 px-2 sm:px-4 py-2 border-b">
               <h3 className="text-xs sm:text-sm font-medium text-gray-700 capitalize">
-                {transform.type}
+                {transform.type.replace('-', ' ')}
+                {transform.params?.color && (
+                  <span className="ml-2 text-xs text-gray-500">
+                    ({transform.params.color})
+                  </span>
+                )}
               </h3>
             </div>
             <div className="p-2 sm:p-4">
