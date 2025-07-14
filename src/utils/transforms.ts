@@ -261,8 +261,56 @@ export const applyColorToAlpha = (
   });
 };
 
+/**
+ * Upscales an image by doubling the pixel count with cubic interpolation
+ * @param imageUrl - The data URL or source of the image
+ * @returns Promise that resolves with the upscaled image data URL
+ */
+export const applyUpscale = (imageUrl: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    console.log('Starting upscale transform on:', imageUrl.substring(0, 50) + '...');
+    
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      console.log('Image loaded for upscale, original dimensions:', img.width, 'x', img.height);
+      
+      const canvas = document.createElement('canvas');
+      const newWidth = img.width * 2;
+      const newHeight = img.height * 2;
+      
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        reject(new Error('Could not get canvas context'));
+        return;
+      }
+      
+      // Enable image smoothing with highest quality for cubic interpolation
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      
+      // Draw the scaled image
+      ctx.drawImage(img, 0, 0, newWidth, newHeight);
+      
+      const result = canvas.toDataURL('image/jpeg', 0.9);
+      console.log('Upscale transform complete, new dimensions:', newWidth, 'x', newHeight);
+      resolve(result);
+    };
+    
+    img.onerror = (error) => {
+      console.error('Failed to load image for upscale:', error);
+      reject(new Error('Failed to load image'));
+    };
+    
+    img.src = imageUrl;
+  });
+};
+
 // Transform types and options
-export type TransformType = 'grayscale' | 'sepia' | 'invert' | 'color-to-alpha';
+export type TransformType = 'grayscale' | 'sepia' | 'invert' | 'color-to-alpha' | 'upscale';
 
 export interface TransformStep {
   type: TransformType;
@@ -303,5 +351,10 @@ export const availableTransforms: Transform[] = [
     apply: (imageUrl: string, params?: { color?: string; tolerance?: number; transparencyThreshold?: number; opacityThreshold?: number }) => 
       applyColorToAlpha(imageUrl, params?.color, params?.tolerance, params?.transparencyThreshold, params?.opacityThreshold),
     needsParams: true
+  },
+  {
+    type: 'upscale',
+    label: 'Upscale 2x',
+    apply: applyUpscale
   }
 ];
