@@ -309,8 +309,83 @@ export const applyUpscale = (imageUrl: string): Promise<string> => {
   });
 };
 
+/**
+ * Applies alpha threshold filter to an image (similar to GIMP's Color > Threshold > Channel = Alpha)
+ * @param imageUrl - The data URL or source of the image
+ * @param whiteThreshold - Alpha threshold for white (0-255)
+ * @param blackThreshold - Alpha threshold for black (0-255)
+ * @returns Promise that resolves with the transformed image data URL
+ */
+export const applyAlphaThreshold = (
+  imageUrl: string,
+  whiteThreshold: number = 200,
+  blackThreshold: number = 100
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    console.log('Starting alpha threshold transform on:', imageUrl.substring(0, 50) + '...');
+    console.log('Params - White threshold:', whiteThreshold, 'Black threshold:', blackThreshold);
+    
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      console.log('Image loaded for alpha threshold, dimensions:', img.width, 'x', img.height);
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        reject(new Error('Could not get canvas context'));
+        return;
+      }
+      
+      // Draw the original image
+      ctx.drawImage(img, 0, 0);
+      
+      // Apply alpha threshold filter
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      console.log('Applying alpha threshold to', data.length / 4, 'pixels');
+      
+      for (let i = 0; i < data.length; i += 4) {
+        const alpha = data[i + 3];
+        
+        // Apply threshold based on alpha value
+        if (alpha >= whiteThreshold) {
+          // Make pixel white
+          data[i] = 255;     // red
+          data[i + 1] = 255; // green
+          data[i + 2] = 255; // blue
+          data[i + 3] = 255; // alpha
+        } else if (alpha <= blackThreshold) {
+          // Make pixel black
+          data[i] = 0;       // red
+          data[i + 1] = 0;   // green
+          data[i + 2] = 0;   // blue
+          data[i + 3] = 255; // alpha
+        }
+        // Pixels between thresholds remain unchanged
+      }
+      
+      ctx.putImageData(imageData, 0, 0);
+      const result = canvas.toDataURL('image/png'); // Use PNG to preserve any transparency
+      console.log('Alpha threshold transform complete, result:', result.substring(0, 50) + '...');
+      resolve(result);
+    };
+    
+    img.onerror = (error) => {
+      console.error('Failed to load image for alpha threshold:', error);
+      reject(new Error('Failed to load image'));
+    };
+    
+    img.src = imageUrl;
+  });
+};
+
 // Transform types and options
-export type TransformType = 'grayscale' | 'sepia' | 'invert' | 'color-to-alpha' | 'upscale';
+export type TransformType = 'grayscale' | 'sepia' | 'invert' | 'color-to-alpha' | 'upscale' | 'alpha-threshold';
 
 export interface TransformStep {
   type: TransformType;
@@ -319,6 +394,8 @@ export interface TransformStep {
     tolerance?: number;
     transparencyThreshold?: number;
     opacityThreshold?: number;
+    whiteThreshold?: number;
+    blackThreshold?: number;
   };
 }
 
@@ -356,5 +433,12 @@ export const availableTransforms: Transform[] = [
     type: 'upscale',
     label: 'Upscale 2x',
     apply: applyUpscale
+  },
+  {
+    type: 'alpha-threshold',
+    label: 'Alpha Threshold',
+    apply: (imageUrl: string, params?: { whiteThreshold?: number; blackThreshold?: number }) => 
+      applyAlphaThreshold(imageUrl, params?.whiteThreshold, params?.blackThreshold),
+    needsParams: true
   }
 ];

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import ImageUploader from '@/components/ImageUploader';
 import Pipeline from '@/components/Pipeline';
 import { ColorPickerDialog } from '@/components/ColorPickerDialog';
+import { AlphaThresholdDialog } from '@/components/AlphaThresholdDialog';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { availableTransforms, TransformType, TransformStep } from '@/utils/transforms';
 import { useToast } from '@/hooks/use-toast';
@@ -22,6 +23,7 @@ interface ImagePipeline {
 const Index = () => {
   const [pipelines, setPipelines] = useState<ImagePipeline[]>([]);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
+  const [alphaThresholdOpen, setAlphaThresholdOpen] = useState(false);
   const [pendingTransform, setPendingTransform] = useState<TransformType | null>(null);
   const { toast } = useToast();
 
@@ -155,6 +157,18 @@ const Index = () => {
     setPendingTransform(null);
   };
 
+  const handleAlphaThresholdConfirm = async (whiteThreshold: number, blackThreshold: number) => {
+    if (!pendingTransform) return;
+    
+    const params = { whiteThreshold, blackThreshold };
+    await applyTransformWithParams(pendingTransform, params);
+    setPendingTransform(null);
+  };
+
+  const handleAlphaThresholdCancel = () => {
+    setPendingTransform(null);
+  };
+
   const applyTransformWithParams = async (transformType: TransformType, params?: any) => {
     if (pipelines.length === 0) return;
 
@@ -225,6 +239,10 @@ const Index = () => {
         if (transformType === 'color-to-alpha') {
           setPendingTransform(transformType);
           setColorPickerOpen(true);
+          return;
+        } else if (transformType === 'alpha-threshold') {
+          setPendingTransform(transformType);
+          setAlphaThresholdOpen(true);
           return;
         }
       }
@@ -326,6 +344,13 @@ const Index = () => {
           onOpenChange={setColorPickerOpen}
           onConfirm={handleColorPickerConfirm}
           onCancel={handleColorPickerCancel}
+        />
+        
+        <AlphaThresholdDialog
+          open={alphaThresholdOpen}
+          onOpenChange={setAlphaThresholdOpen}
+          onConfirm={handleAlphaThresholdConfirm}
+          onCancel={handleAlphaThresholdCancel}
         />
       </div>
     </div>
