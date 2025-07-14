@@ -4,7 +4,7 @@ import TransformPanel from './TransformPanel';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
-import { Palette, Contrast, Minus, Droplets } from 'lucide-react';
+import { Palette, Contrast, Minus, Droplets, Maximize2 } from 'lucide-react';
 
 interface PipelineTransform extends TransformStep {
   imageUrl: string;
@@ -56,6 +56,8 @@ const Pipeline: React.FC<PipelineProps> = ({ imageUrl, transforms = [], layoutTy
         return Minus;
       case 'color-to-alpha':
         return Droplets;
+      case 'upscale':
+        return Maximize2;
       default:
         return Palette;
     }
