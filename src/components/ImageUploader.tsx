@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
 interface ImageUploaderProps {
-  onImageUpload: (imageUrl: string) => void;
+  onImageUpload: (imageUrls: string[]) => void;
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
@@ -26,34 +26,62 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
     e.preventDefault();
     setIsDragging(false);
     
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFiles(Array.from(e.dataTransfer.files));
     }
   };
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0]);
+    if (e.target.files && e.target.files.length > 0) {
+      handleFiles(Array.from(e.target.files));
     }
   };
 
-  const handleFile = (file: File) => {
-    if (!file.type.match('image.*')) {
+  const handleFiles = async (files: File[]) => {
+    const imageFiles = files.filter(file => file.type.match('image.*'));
+    
+    if (imageFiles.length === 0) {
       toast({
         title: "Invalid file type",
-        description: "Please upload an image file",
+        description: "Please upload image files",
         variant: "destructive"
       });
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target && typeof e.target.result === 'string') {
-        onImageUpload(e.target.result);
+    if (imageFiles.length < files.length) {
+      toast({
+        title: "Some files skipped",
+        description: `${files.length - imageFiles.length} non-image files were skipped`,
+        variant: "destructive"
+      });
+    }
+
+    const imageUrls: string[] = [];
+    
+    for (const file of imageFiles) {
+      try {
+        const imageUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (e.target && typeof e.target.result === 'string') {
+              resolve(e.target.result);
+            } else {
+              reject(new Error('Failed to read file'));
+            }
+          };
+          reader.onerror = () => reject(new Error('Failed to read file'));
+          reader.readAsDataURL(file);
+        });
+        imageUrls.push(imageUrl);
+      } catch (error) {
+        console.error('Error reading file:', error);
       }
-    };
-    reader.readAsDataURL(file);
+    }
+
+    if (imageUrls.length > 0) {
+      onImageUpload(imageUrls);
+    }
   };
 
   const openFileDialog = () => {
@@ -64,8 +92,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
 
   return (
     <div className="p-2 sm:p-4 bg-card rounded-lg border border-border shadow-sm flex flex-col items-center">
-      <h3 className="text-xs sm:text-sm font-medium text-card-foreground mb-4 hidden sm:block">Add New Image</h3>
-      <h3 className="text-xs font-medium text-card-foreground mb-4 sm:hidden">Add Image</h3>
+      <h3 className="text-xs sm:text-sm font-medium text-card-foreground mb-4 hidden sm:block">Add New Images</h3>
+      <h3 className="text-xs font-medium text-card-foreground mb-4 sm:hidden">Add Images</h3>
       <div 
         className={`border-2 border-dashed rounded-lg p-4 sm:p-6 w-full flex flex-col items-center justify-center cursor-pointer transition-colors
           ${isDragging ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}
@@ -80,9 +108,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
           ref={fileInputRef}
           onChange={handleFileInput}
           accept="image/*"
+          multiple
         />
         <Upload className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground mb-2" />
-        <p className="text-xs sm:text-sm text-muted-foreground mb-1 hidden sm:block">Drag & drop an image here</p>
+        <p className="text-xs sm:text-sm text-muted-foreground mb-1 hidden sm:block">Drag & drop images here</p>
         <p className="text-xs text-muted-foreground mb-1 sm:hidden">Upload</p>
         <p className="text-xs text-muted-foreground/70 hidden sm:block">or click to browse</p>
       </div>

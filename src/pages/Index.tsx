@@ -27,47 +27,56 @@ const Index = () => {
   const [pendingTransform, setPendingTransform] = useState<TransformType | null>(null);
   const { toast } = useToast();
 
-  const handleImageUpload = async (imageUrl: string) => {
+  const handleImageUpload = async (imageUrls: string[]) => {
     try {
-      // If there are existing pipelines with transforms, apply them to the new image
-      let transforms: PipelineTransform[] = [];
-      if (pipelines.length > 0 && pipelines[0].transforms.length > 0) {
-        let currentImageUrl = imageUrl;
-        
-        // Apply each transform sequentially
-        for (const transform of pipelines[0].transforms) {
-          const transformDefinition = availableTransforms.find(t => t.type === transform.type);
-          if (transformDefinition) {
-            const transformedImageUrl = await transformDefinition.apply(currentImageUrl, transform.params);
-            transforms.push({
-              type: transform.type,
-              params: transform.params,
-              imageUrl: transformedImageUrl
-            });
-            currentImageUrl = transformedImageUrl;
+      const newPipelines: ImagePipeline[] = [];
+      
+      for (const imageUrl of imageUrls) {
+        // If there are existing pipelines with transforms, apply them to the new image
+        let transforms: PipelineTransform[] = [];
+        if (pipelines.length > 0 && pipelines[0].transforms.length > 0) {
+          let currentImageUrl = imageUrl;
+          
+          // Apply each transform sequentially
+          for (const transform of pipelines[0].transforms) {
+            const transformDefinition = availableTransforms.find(t => t.type === transform.type);
+            if (transformDefinition) {
+              const transformedImageUrl = await transformDefinition.apply(currentImageUrl, transform.params);
+              transforms.push({
+                type: transform.type,
+                params: transform.params,
+                imageUrl: transformedImageUrl
+              });
+              currentImageUrl = transformedImageUrl;
+            }
           }
         }
+
+        const newPipeline: ImagePipeline = {
+          id: `pipeline-${Date.now()}-${Math.random()}`,
+          imageUrl,
+          transforms
+        };
+        
+        newPipelines.push(newPipeline);
       }
-
-      const newPipeline: ImagePipeline = {
-        id: `pipeline-${Date.now()}`,
-        imageUrl,
-        transforms
-      };
       
-      setPipelines([...pipelines, newPipeline]);
+      setPipelines([...pipelines, ...newPipelines]);
 
-      if (transforms.length > 0) {
+      if (newPipelines.length > 0) {
+        const transformCount = newPipelines[0].transforms.length;
         toast({
-          title: "Image added with transforms",
-          description: `Applied ${transforms.length} existing transform${transforms.length > 1 ? 's' : ''} to the new image.`
+          title: `${newPipelines.length} image${newPipelines.length > 1 ? 's' : ''} added`,
+          description: transformCount > 0 
+            ? `Applied ${transformCount} existing transform${transformCount > 1 ? 's' : ''} to all new images.`
+            : undefined
         });
       }
     } catch (error) {
-      console.error('Error applying transforms to new image:', error);
+      console.error('Error applying transforms to new images:', error);
       toast({
-        title: "Image added with errors",
-        description: "Some transforms could not be applied to the new image.",
+        title: "Images added with errors",
+        description: "Some transforms could not be applied to the new images.",
         variant: "destructive"
       });
     }
