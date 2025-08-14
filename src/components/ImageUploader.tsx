@@ -122,8 +122,20 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
       handlePaste(e);
     };
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Ctrl+V (Windows/Linux) or Cmd+V (macOS)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        // Let the paste event handle the clipboard data
+        return;
+      }
+    };
+
     document.addEventListener('paste', handleGlobalPaste);
-    return () => document.removeEventListener('paste', handleGlobalPaste);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('paste', handleGlobalPaste);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const openFileDialog = () => {
@@ -155,7 +167,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
         <Upload className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground mb-2" />
         <p className="text-xs sm:text-sm text-muted-foreground mb-1 hidden sm:block">Drag & drop images here</p>
         <p className="text-xs text-muted-foreground mb-1 sm:hidden">Upload</p>
-        <p className="text-xs text-muted-foreground/70 hidden sm:block">or click to browse, or paste with Ctrl+V</p>
+        <p className="text-xs text-muted-foreground/70 hidden sm:block">or click to browse, or paste with Ctrl+V / Cmd+V</p>
       </div>
     </div>
   );
