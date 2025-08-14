@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Upload, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -84,6 +84,48 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
     }
   };
 
+  const handlePaste = async (e: ClipboardEvent) => {
+    e.preventDefault();
+    
+    const items = Array.from(e.clipboardData?.items || []);
+    const imageItems = items.filter(item => item.type.match('image.*'));
+    
+    if (imageItems.length === 0) {
+      toast({
+        title: "No images found",
+        description: "Please copy an image and try again",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const files: File[] = [];
+    for (const item of imageItems) {
+      const file = item.getAsFile();
+      if (file) {
+        files.push(file);
+      }
+    }
+
+    if (files.length > 0) {
+      handleFiles(files);
+    }
+  };
+
+  useEffect(() => {
+    const handleGlobalPaste = (e: ClipboardEvent) => {
+      // Only handle paste if no input/textarea is focused
+      const activeElement = document.activeElement;
+      if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+        return;
+      }
+      handlePaste(e);
+    };
+
+    document.addEventListener('paste', handleGlobalPaste);
+    return () => document.removeEventListener('paste', handleGlobalPaste);
+  }, []);
+
   const openFileDialog = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -113,7 +155,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
         <Upload className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground mb-2" />
         <p className="text-xs sm:text-sm text-muted-foreground mb-1 hidden sm:block">Drag & drop images here</p>
         <p className="text-xs text-muted-foreground mb-1 sm:hidden">Upload</p>
-        <p className="text-xs text-muted-foreground/70 hidden sm:block">or click to browse</p>
+        <p className="text-xs text-muted-foreground/70 hidden sm:block">or click to browse, or paste with Ctrl+V</p>
       </div>
     </div>
   );
