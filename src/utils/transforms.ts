@@ -384,8 +384,42 @@ export const applyAlphaThreshold = (
   });
 };
 
+// ============= BLUR TRANSFORM =============
+export const applyBlur = (imageUrl: string, radius: number = 5): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        reject(new Error('Could not get canvas context'));
+        return;
+      }
+      
+      canvas.width = img.width;
+      canvas.height = img.height;
+      
+      // Apply blur filter
+      ctx.filter = `blur(${radius}px)`;
+      ctx.drawImage(img, 0, 0);
+      
+      const dataURL = canvas.toDataURL('image/png');
+      resolve(dataURL);
+    };
+    
+    img.onerror = () => {
+      reject(new Error('Failed to load image'));
+    };
+    
+    img.src = imageUrl;
+  });
+};
+
 // Transform types and options
-export type TransformType = 'grayscale' | 'sepia' | 'invert' | 'color-to-alpha' | 'upscale' | 'alpha-threshold';
+export type TransformType = 'grayscale' | 'sepia' | 'invert' | 'color-to-alpha' | 'upscale' | 'alpha-threshold' | 'blur';
 
 export interface TransformStep {
   type: TransformType;
@@ -396,6 +430,7 @@ export interface TransformStep {
     opacityThreshold?: number;
     whiteThreshold?: number;
     blackThreshold?: number;
+    radius?: number;
   };
 }
 
@@ -439,6 +474,13 @@ export const availableTransforms: Transform[] = [
     label: 'Alpha Threshold',
     apply: (imageUrl: string, params?: { whiteThreshold?: number; blackThreshold?: number }) => 
       applyAlphaThreshold(imageUrl, params?.whiteThreshold, params?.blackThreshold),
+    needsParams: true
+  },
+  {
+    type: 'blur',
+    label: 'Blur',
+    apply: (imageUrl: string, params?: { radius?: number }) => 
+      applyBlur(imageUrl, params?.radius),
     needsParams: true
   }
 ];

@@ -4,8 +4,9 @@ import ImageUploader from '@/components/ImageUploader';
 import Pipeline from '@/components/Pipeline';
 import { ColorPickerDialog } from '@/components/ColorPickerDialog';
 import { AlphaThresholdDialog } from '@/components/AlphaThresholdDialog';
+import { BlurDialog } from '@/components/BlurDialog';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { availableTransforms, TransformType, TransformStep } from '@/utils/transforms';
+import { applyAlphaThreshold, applyBlur, availableTransforms, TransformType, TransformStep } from '@/utils/transforms';
 import { useToast } from '@/hooks/use-toast';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ const Index = () => {
   const [pipelines, setPipelines] = useState<ImagePipeline[]>([]);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [alphaThresholdOpen, setAlphaThresholdOpen] = useState(false);
+  const [blurOpen, setBlurOpen] = useState(false);
   const [pendingTransform, setPendingTransform] = useState<TransformType | null>(null);
   const { toast } = useToast();
 
@@ -178,6 +180,18 @@ const Index = () => {
     setPendingTransform(null);
   };
 
+  const handleBlurConfirm = async (radius: number) => {
+    if (!pendingTransform) return;
+    
+    const params = { radius };
+    await applyTransformWithParams(pendingTransform, params);
+    setPendingTransform(null);
+  };
+
+  const handleBlurCancel = () => {
+    setPendingTransform(null);
+  };
+
   const applyTransformWithParams = async (transformType: TransformType, params?: any) => {
     if (pipelines.length === 0) return;
 
@@ -252,6 +266,10 @@ const Index = () => {
         } else if (transformType === 'alpha-threshold') {
           setPendingTransform(transformType);
           setAlphaThresholdOpen(true);
+          return;
+        } else if (transformType === 'blur') {
+          setPendingTransform(transformType);
+          setBlurOpen(true);
           return;
         }
       }
@@ -360,6 +378,13 @@ const Index = () => {
           onOpenChange={setAlphaThresholdOpen}
           onConfirm={handleAlphaThresholdConfirm}
           onCancel={handleAlphaThresholdCancel}
+        />
+        
+        <BlurDialog
+          open={blurOpen}
+          onOpenChange={setBlurOpen}
+          onConfirm={handleBlurConfirm}
+          onCancel={handleBlurCancel}
         />
       </div>
     </div>
