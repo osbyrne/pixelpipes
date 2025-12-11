@@ -343,18 +343,19 @@ const Index = () => {
                   {pipelines[0].transforms.map((transform, index) => (
                     <div 
                       key={`${transform.type}-${index}`}
-                      className="flex items-center justify-between p-2 bg-muted rounded border border-border text-sm"
+                      className="flex items-center justify-between p-2 bg-muted rounded border border-border text-sm gap-2"
                     >
-                      <span className="capitalize font-medium text-muted-foreground">
-                        {index + 1}. {transform.type}
+                      <span className="capitalize font-medium text-muted-foreground truncate">
+                        {index + 1}. {transform.type.replace('-', ' ')}
                       </span>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0 hover:bg-destructive/10"
+                        className="h-7 px-2 hover:bg-destructive/10 shrink-0"
                         onClick={() => handleDeleteStep(index)}
                       >
                         <X className="h-3 w-3 text-destructive" />
+                        <span className="ml-1 text-xs text-destructive hidden sm:inline">Delete</span>
                       </Button>
                     </div>
                   ))}
