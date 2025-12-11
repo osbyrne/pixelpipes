@@ -418,8 +418,105 @@ export const applyBlur = (imageUrl: string, radius: number = 5): Promise<string>
   });
 };
 
+/**
+ * Crops an image to its content by removing transparent borders
+ * @param imageUrl - The data URL or source of the image
+ * @returns Promise that resolves with the cropped image data URL
+ */
+export const applyCropToContent = (imageUrl: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    console.log('Starting crop-to-content transform on:', imageUrl.substring(0, 50) + '...');
+    
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      console.log('Image loaded for crop-to-content, dimensions:', img.width, 'x', img.height);
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        reject(new Error('Could not get canvas context'));
+        return;
+      }
+      
+      // Draw the original image
+      ctx.drawImage(img, 0, 0);
+      
+      // Get image data to find bounding box of non-transparent pixels
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      const width = canvas.width;
+      const height = canvas.height;
+      
+      let minX = width;
+      let minY = height;
+      let maxX = 0;
+      let maxY = 0;
+      
+      // Scan for non-transparent pixels
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4;
+          const alpha = data[i + 3];
+          
+          if (alpha > 0) {
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+          }
+        }
+      }
+      
+      // Check if any content was found
+      if (minX > maxX || minY > maxY) {
+        console.log('No non-transparent content found, returning original');
+        resolve(imageUrl);
+        return;
+      }
+      
+      const cropWidth = maxX - minX + 1;
+      const cropHeight = maxY - minY + 1;
+      
+      console.log('Crop bounds:', { minX, minY, maxX, maxY, cropWidth, cropHeight });
+      
+      // Create cropped canvas
+      const croppedCanvas = document.createElement('canvas');
+      croppedCanvas.width = cropWidth;
+      croppedCanvas.height = cropHeight;
+      const croppedCtx = croppedCanvas.getContext('2d');
+      
+      if (!croppedCtx) {
+        reject(new Error('Could not get cropped canvas context'));
+        return;
+      }
+      
+      // Draw cropped portion
+      croppedCtx.drawImage(
+        canvas,
+        minX, minY, cropWidth, cropHeight,
+        0, 0, cropWidth, cropHeight
+      );
+      
+      const result = croppedCanvas.toDataURL('image/png');
+      console.log('Crop-to-content complete, new dimensions:', cropWidth, 'x', cropHeight);
+      resolve(result);
+    };
+    
+    img.onerror = (error) => {
+      console.error('Failed to load image for crop-to-content:', error);
+      reject(new Error('Failed to load image'));
+    };
+    
+    img.src = imageUrl;
+  });
+};
+
 // Transform types and options
-export type TransformType = 'grayscale' | 'sepia' | 'invert' | 'color-to-alpha' | 'upscale' | 'alpha-threshold' | 'blur';
+export type TransformType = 'grayscale' | 'sepia' | 'invert' | 'color-to-alpha' | 'upscale' | 'alpha-threshold' | 'blur' | 'crop-to-content';
 
 export interface TransformStep {
   type: TransformType;
@@ -482,5 +579,10 @@ export const availableTransforms: Transform[] = [
     apply: (imageUrl: string, params?: { radius?: number }) => 
       applyBlur(imageUrl, params?.radius),
     needsParams: true
+  },
+  {
+    type: 'crop-to-content',
+    label: 'Crop to Content',
+    apply: applyCropToContent
   }
 ];

@@ -4,7 +4,7 @@ import TransformPanel from './TransformPanel';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
-import { Palette, Contrast, Minus, Droplets, Maximize2, Layers, CircleOff } from 'lucide-react';
+import { Palette, Contrast, Minus, Droplets, Maximize2, Layers, CircleOff, Crop } from 'lucide-react';
 
 interface PipelineTransform extends TransformStep {
   imageUrl: string;
@@ -62,6 +62,8 @@ const Pipeline: React.FC<PipelineProps> = ({ imageUrl, transforms = [], layoutTy
         return Layers;
       case 'blur':
         return CircleOff;
+      case 'crop-to-content':
+        return Crop;
       default:
         return Palette;
     }
