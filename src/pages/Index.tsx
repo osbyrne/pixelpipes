@@ -8,7 +8,7 @@ import { BlurDialog } from '@/components/BlurDialog';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { applyAlphaThreshold, applyBlur, availableTransforms, TransformType, TransformStep } from '@/utils/transforms';
 import { useToast } from '@/hooks/use-toast';
-import { X } from 'lucide-react';
+import { X, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface PipelineTransform extends TransformStep {
@@ -153,6 +153,30 @@ const Index = () => {
     toast({
       title: "Image removed",
       description: "The image and its transformations have been removed."
+    });
+  };
+
+  const handleSaveAllFinalImages = () => {
+    if (pipelines.length === 0) return;
+
+    pipelines.forEach((pipeline, index) => {
+      // Get the final image (last transform result or original if no transforms)
+      const finalImageUrl = pipeline.transforms.length > 0
+        ? pipeline.transforms[pipeline.transforms.length - 1].imageUrl
+        : pipeline.imageUrl;
+
+      // Create download link
+      const link = document.createElement('a');
+      link.href = finalImageUrl;
+      link.download = `image-${index + 1}-final.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+
+    toast({
+      title: "Download started",
+      description: `Saving ${pipelines.length} image${pipelines.length > 1 ? 's' : ''}.`
     });
   };
 
@@ -360,9 +384,19 @@ const Index = () => {
             ))}
           </div>
           
-          {/* Image uploader */}
-          <div className="order-3 lg:order-4 lg:col-span-1">
+          {/* Image uploader and save button */}
+          <div className="order-3 lg:order-4 lg:col-span-1 space-y-4">
             <ImageUploader onImageUpload={handleImageUpload} />
+            {pipelines.length > 0 && (
+              <Button 
+                onClick={handleSaveAllFinalImages}
+                variant="outline"
+                className="w-full"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Save All Final Images
+              </Button>
+            )}
           </div>
         </div>
         
